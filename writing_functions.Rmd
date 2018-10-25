@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
   out.width = "90%"
 )
 library(tidyverse)
+library(rvest)
 theme_set(theme_bw() + theme(legend.position = "bottom"))
 ```
 
@@ -97,10 +98,153 @@ mean_and_sd(unif_sample)
 ```
 
 
-## 
+## Multiple inputs
+
+Look at simple linear regression! 
+
+```{r}
+sim_data = tibble(
+  x = rnorm(30, 1, 1),
+  y = 2 + 3 * x + rnorm(30, 0, 1)
+)
+
+# sim_data %>% ggplot(aes(x = x, y = y)) + geom_point()
+
+ls_fit = lm(y ~ x, data = sim_data)
+
+beta0_hat = coef(ls_fit)[1]
+beta1_hat = coef(ls_fit)[2]
+
+```
 
 
+Write a function that simulates data, fits the model, and returns the estimates. Inputs are sample size and true coefficients 
 
 
+```{r}
+sim_regression = function(n, beta0, beta1) {
+  sim_data = tibble(
+    x = rnorm(n, 1, 1),
+    y = beta0 + beta1 * x + rnorm(n, 0, 1)
+  )
 
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  tibble(
+    beta0_hat = coef(ls_fit)[1],
+    beta1_hat = coef(ls_fit)[2]
+  )
+
+}
+```
+
+Running the sim:
+
+```{r}
+sim_regression(n = 30, beta0 = 2, beta1 = 5)
+
+sim_regression(n = 3000, beta0 = 0, beta1 = -1)
+
+```
+
+
+## More functions!!11!!! and some old examples
+
+Writing a function to extract amazon reviews instead of the old code we had 
+
+```{r}
+url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber=1"
+
+extract_reviews = function(url) {
+  
+  dynamite_html = read_html(url)
+  
+  review_titles = dynamite_html %>%
+    html_nodes("#cm_cr-review_list .review-title") %>%
+    html_text()
+  
+  review_stars = dynamite_html %>%
+    html_nodes("#cm_cr-review_list .review-rating") %>%
+    html_text() %>%
+    str_extract("\\d") %>%
+    as.numeric()
+  
+  review_text = dynamite_html %>%
+    html_nodes(".review-data:nth-child(4)") %>%
+    html_text()
+  
+  reviews = tibble(
+    title = review_titles,
+    stars = review_stars,
+    text = review_text
+  )
+  reviews
+}
+
+extract_reviews(url)
+```
+
+Let's extract a lot of reviews...
+
+```{r}
+url_base = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber="
+urls = str_c(url_base, 1:5)
+
+dynamite_reviews = bind_rows(
+  extract_reviews(urls[1]),
+  extract_reviews(urls[2]),
+  extract_reviews(urls[3]),
+  extract_reviews(urls[4]),
+  extract_reviews(urls[5])
+)
+dynamite_reviews
+```
+
+
+LOTR Function
+
+```{r}
+fellowship_ring = readxl::read_excel("./data/LotR_Words.xlsx", range = "B3:D6") %>%
+  mutate(movie = "fellowship_ring")
+
+two_towers = readxl::read_excel("./data/LotR_Words.xlsx", range = "F3:H6") %>%
+  mutate(movie = "two_towers")
+
+return_king = readxl::read_excel("./data/LotR_Words.xlsx", range = "J3:L6") %>%
+  mutate(movie = "return_king")
+
+lotr_tidy = bind_rows(fellowship_ring, two_towers, return_king) %>%
+  janitor::clean_names() %>%
+  gather(key = sex, value = words, female:male) %>%
+  mutate(race = tolower(race)) %>% 
+  select(movie, everything()) 
+```
+
+
+```{r}
+lotr_load_and_tidy = function(range, title){
+  
+  readxl::read_excel("./data/LotR_Words.xlsx", range = range) %>%
+    mutate(movie = title) 
+  
+}
+
+lotr = lotr_load_and_tidy(range = "B3:D6", title = "fellowship")
+lotr 
+```
+
+
+## Scoping
+
+```{r}
+f = function(x) {
+  z = x + y
+  z
+}
+
+x = 1
+y = 2
+
+f(x = y)
+```
 
