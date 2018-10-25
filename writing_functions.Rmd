@@ -1,0 +1,106 @@
+---
+title: "writing_functions"
+author: "Eric Morris"
+date: "10/25/2018"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+library(tidyverse)
+theme_set(theme_bw() + theme(legend.position = "bottom"))
+```
+
+## Writing some functions 
+
+Starting smol
+
+```{r}
+x = rnorm(25, 5, 3)
+
+(x - mean(x)) / sd(x)
+```
+
+Write a function to compute z scores for a vector
+
+```{r}
+z_scores = function(x) {
+  
+  (x - mean(x)) / sd(x)
+  
+}
+```
+
+Check to see if this works 
+
+```{r}
+unif_sample = runif(100)
+
+z_scores(x = unif_sample)
+```
+
+Check some other examples
+
+```{r, error = TRUE}
+z_scores(3)
+z_scores("my name is jeff")
+z_scores(iris)
+z_scores(sample(c(TRUE, FALSE), 25, replace = TRUE))
+```
+
+Put in some checks on inputs for your function...
+
+```{r}
+z_scores = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Z scores cannot be computed for length 1 vectors")
+  }
+  
+  z = mean(x) / sd(x)
+  
+  z
+}
+```
+
+## New function for mean and SD
+
+```{r}
+mean_and_sd = function(x) {
+
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Z scores cannot be computed for length 1 vectors")
+  }
+  
+  tibble(
+  mean_x = mean(x),
+  sd_x = sd(x)
+  )
+  
+  #c(mean_x, sd_x) 
+  
+}
+
+mean_and_sd(unif_sample)
+
+```
+
+
+## 
+
+
+
+
+
+
